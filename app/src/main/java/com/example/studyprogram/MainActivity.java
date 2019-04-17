@@ -64,7 +64,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
        Z = event.values[2];
        float absoluteValue = (float)Math.sqrt((Math.pow(X, 2) + Math.pow(Y, 2) + Math.pow(Z, 2)));
         ((TextView)findViewById(R.id.absoluteValueText)).setText(String.valueOf(absoluteValue));
-       if(absoluteValue<=2){
+       if(absoluteValue<=3){
            ((TextView)findViewById(R.id.errorMessage)).setText("Ниско ускорение.");
            Button mButton=(Button)findViewById(R.id.colorButton);
            mButton.setBackgroundColor(Color.RED);
