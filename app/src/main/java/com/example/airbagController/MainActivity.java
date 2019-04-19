@@ -27,7 +27,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     private SeekBar thresholdSeekBar;
     public double X, Y, Z, threshold, absoluteValue;
 
-    public static final double THRESHOLD_MAX = 3;
+    public static final double THRESHOLD_MAX = 4;
     public static final double THRESHOLD_MIN = 0.1;
 
     @Override
