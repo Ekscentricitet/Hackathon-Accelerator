@@ -3,20 +3,25 @@ package com.example.airbagController;
 import androidx.appcompat.app.AppCompatActivity;
 import android.content.Context;
 import android.graphics.Color;
+
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
-import android.media.AudioAttributes;
+
+import android.media.AudioFormat;
 import android.media.AudioManager;
+import android.media.AudioTrack;
 import android.media.SoundPool;
-import android.os.Build;
+
 import android.os.Bundle;
 import android.util.Log;
+
+import android.view.View;
 import android.widget.Button;
 import android.widget.SeekBar;
 import android.widget.TextView;
-import android.widget.Toast;
+
 
 public class MainActivity extends AppCompatActivity implements SensorEventListener {
 
@@ -32,6 +37,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 // Defines the variables we will use to store the data.
     private TextView readingX, readingY, readingZ, absoluteValueText, thresholdTextView;
     private SeekBar thresholdSeekBar;
+    private Button forceSignalButton;
     public double X, Y, Z, threshold, absoluteValue;
 
     public static final double THRESHOLD_MAX = 4;
@@ -50,21 +56,9 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 // Sets the delay to zero.
         sensorManager.registerListener(MainActivity.this, accelerometer, sensorManager.SENSOR_DELAY_FASTEST);
         Log.d(TAG, "onCreate: Registered accelerometer listener");
-//Checks the system's version and declares the corresponding soundPool.
-//        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP){
-//            AudioAttributes audioAttributes = new AudioAttributes.Builder()
-//                    .setUsage(AudioAttributes.USAGE_ASSISTANCE_SONIFICATION)
-//                    .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
-//                    .build();
-//
-//            soundPool = new SoundPool.Builder()
-//                    .setMaxStreams(1)
-//                    .setAudioAttributes(audioAttributes)
-//                    .build();
-//        }
-//        else{
-            soundPool = new SoundPool(1, AudioManager.STREAM_MUSIC,0);
-//        }
+ // Declares soundPool.
+        soundPool = new SoundPool(1, AudioManager.STREAM_MUSIC,0);
+
 // Declare the beep's location.
         beep = soundPool.load(this, R.raw.beep, 1);
 
@@ -74,8 +68,16 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         readingZ = findViewById(R.id.axisZ);
         absoluteValueText = findViewById(R.id.absoluteValueText);
         thresholdSeekBar = findViewById(R.id.threshlodSeekBar);
+        forceSignalButton = findViewById(R.id.forceSignalButton);
         thresholdTextView = findViewById(R.id.threshlodTextView);
 
+        forceSignalButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+//                playSound(1500, 441000);
+                soundPool.play(beep, 1, 1, 1, 0, 1);
+            }
+        });
         thresholdSeekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
@@ -92,6 +94,33 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
             public void onStopTrackingTouch(SeekBar seekBar) {
             }
         });
+
+    }
+
+    public void playSound(double frequency, int duration) {
+        // AudioTrack definition
+        int mBufferSize = AudioTrack.getMinBufferSize(44100,
+                AudioFormat.CHANNEL_OUT_MONO,
+                AudioFormat.ENCODING_PCM_8BIT);
+
+        AudioTrack mAudioTrack = new AudioTrack(AudioManager.STREAM_MUSIC, 44100,
+                AudioFormat.CHANNEL_OUT_MONO, AudioFormat.ENCODING_PCM_16BIT,
+                mBufferSize, AudioTrack.MODE_STREAM);
+
+        // Sine wave
+        double[] mSound = new double[4410];
+        short[] mBuffer = new short[duration];
+        for (int i = 0; i < mSound.length; i++) {
+            mSound[i] = 1;//Math.sin((2.0*Math.PI * i/(44100/frequency)));
+            mBuffer[i] = (short) (mSound[i]*Short.MAX_VALUE);
+        }
+
+        mAudioTrack.setStereoVolume(AudioTrack.getMaxVolume(), AudioTrack.getMaxVolume());
+        mAudioTrack.play();
+
+        mAudioTrack.write(mBuffer, 0, mSound.length);
+        mAudioTrack.stop();
+        mAudioTrack.release();
 
     }
 
@@ -114,13 +143,14 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 
         absoluteValueText.setText(String.format("Absolute Value: %.3f", absoluteValue));
 
+        Button mButton = findViewById(R.id.colorButton);
+
        if(absoluteValue <= threshold){
-           Button mButton = findViewById(R.id.colorButton);
            mButton.setBackgroundColor(Color.RED);
            soundPool.play(beep, 1, 1, 1, 0, 1);
+//           playSound(1500, 441000);
        }
        else{
-           Button mButton = findViewById(R.id.colorButton);
            mButton.setBackgroundColor(Color.GREEN);
        }
     }
